@@ -35,7 +35,7 @@ def random_edge(G: Graph, Tn):
     return em
     """
 
-#DA CAMBAIRE CON UN ARCO SCELTO TRA QUELLI DI VN
+# DA CAMBAIRE CON UN ARCO SCELTO TRA QUELLI DI VN
 def random_edge(G: Graph, n, Tn):
     em = graphtools.randomEdge(G)
     while Tn.get('em', 0) != 0:
