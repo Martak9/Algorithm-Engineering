@@ -1,3 +1,5 @@
+import random
+
 from networkit import graphtools
 from networkit.graph import Graph
 
@@ -35,19 +37,22 @@ def random_edge(G: Graph, Tn):
     return em
     """
 
-# DA CAMBAIRE CON UN ARCO SCELTO TRA QUELLI DI VN
+# Se gli archi sono già stati tutti visitati?
 def random_edge(G: Graph, n, Tn):
-    em = graphtools.randomEdge(G)
+    edge_from_node = []
+    for edge in G.iterEdges():
+        if edge[0] == n:
+            edge_from_node.append(edge)
+    em = random.choice(edge_from_node)
     while Tn.get('em', 0) != 0:
-        em = graphtools.randomEdge(G)
+        em = random.choice(edge_from_node)
     return em
 
-
+# Se non ci sono nodi vicini?
 def neighbor_node(G: Graph, n, em):
     for neighbor in G.iterNeighbors(n):
         if em.hasEdge(n, neighbor) or em.hasEdge(neighbor, n):
             return neighbor
-    # DA CAMBIARE
     return None
 
 
