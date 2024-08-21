@@ -28,15 +28,7 @@ def ERW_KPath(G: Graph, k, p, b):
         vn = graphtools.randomNode(G)
         messagePropagation(vn, N, k, b, G)
 
-
 """
-def random_edge(G: Graph, Tn):
-    em = graphtools.randomEdge(G)
-    while Tn.get('em', 0) != 0:
-        em = graphtools.randomEdge(G)
-    return em
-    """
-
 # Se gli archi sono già stati tutti visitati?
 def random_edge(G: Graph, n, Tn):
     edge_from_node = []
@@ -47,20 +39,45 @@ def random_edge(G: Graph, n, Tn):
     while Tn.get('em', 0) != 0:
         em = random.choice(edge_from_node)
     return em
+"""
 
+def random_edge(G: Graph, n, Tn):
+    edge_from_node = []
+    for edge in G.iterEdges():
+        if edge[0] == n and edge not in Tn:
+            edge_from_node.append(edge)
+    if not edge_from_node:
+        return None  # Non ci sono archi disponibili
+    return random.choice(edge_from_node)
+
+"""
 # Se non ci sono nodi vicini?
 def neighbor_node(G: Graph, n, em):
     for neighbor in G.iterNeighbors(n):
         if em.hasEdge(n, neighbor) or em.hasEdge(neighbor, n):
             return neighbor
     return None
+"""
+
+def neighbor_node(G: Graph, n, em):
+    u, v = em  # Spacchetta la tupla dell'arco
+    if u == n:
+        return v
+    elif v == n:
+        return u
+    else:
+        return None  # L'arco non è connesso al nodo n
 
 
 def messagePropagation(n, N, k, b, G: Graph):
     Tn = {}
     while N < k and G.degree(n) > sum(Tn.values()):
-        em = random_edge(G, Tn)
+        em = random_edge(G, n, Tn)
+        if em is None:
+            break
         vn = neighbor_node(G, n, em)
+        if vn is None:
+            continue  # L'arco non è connesso al nodo n, prova con un altro arco
         Tn[em] = 1
         G.setWeight(n, vn, G.weight(n, vn) + b)
         n = vn
