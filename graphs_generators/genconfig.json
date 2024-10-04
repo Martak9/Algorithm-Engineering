@@ -1,0 +1,12 @@
+{
+  "generator": "StdGraphGenerator",
+  "StdGraphGenerator": {
+    "graph_flag": "2expedge",
+    "result_folder": "../graph",
+    "n": 640,
+    "m": 639,
+    "doubling_n_factor": 1,
+    "doubling_m_factor": 1,
+    "max_number_of_graph": 1
+  }
+}
