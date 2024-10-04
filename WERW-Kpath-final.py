@@ -2,6 +2,8 @@ import random
 import networkit as nk
 from networkit import Graph
 
+from csv_writer import CsvWriter
+
 
 def assign_normalized_degree(G: Graph):
     degrees = {}
@@ -70,10 +72,19 @@ def main():
 
     WERW_KPath(G, kappa, rho)  # Remove the beta parameter
 
-    # Print results
-    print("Edge Centrality Values:")
-    for u, v in G.iterEdges():
-        print(f"Edge ({u}, {v}): {G.weight(u, v)}")
+
+    edge_centrality = [(u, v, G.weight(u, v)) for u, v in G.iterEdges()]
+
+    edge_centrality_sorted = sorted(edge_centrality, key=lambda x: x[2], reverse=True)
+
+
+    print("Edge Centrality Values (sorted):")
+    csv_data = []
+    for u, v, weight in edge_centrality_sorted:
+        dict_csv_row = {"edge": f"{u}, {v}", "centrality": weight}
+        csv_data.append(dict_csv_row)
+        print(f"Edge ({u}, {v}): {weight}")
+    CsvWriter().write(csv_data, "./csv_files/time", ["edge", "centrality"])
 
 if __name__ == "__main__":
     main()
