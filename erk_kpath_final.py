@@ -1,5 +1,6 @@
 import random
 import networkit as nk
+from networkit import Graph
 
 from csv_writer import CsvWriter
 
@@ -43,11 +44,7 @@ def MessagePropagation(G: nk.Graph, vn: int, N: int, kappa: int, beta: float):
         N += 1
 
 
-def main():
-    # Load graph
-    reader = nk.graphio.EdgeListReader(separator=" ", firstNode=0, continuous=False, directed=False)
-    G = reader.read("./graph/2expedge(n=640, m=639).txt")
-
+def erw_centrality_algorithm(G: Graph):
     # Algorithm parameters
     kappa = 3  # Maximum path length
     rho = G.numberOfEdges()  # Number of iterations
@@ -58,6 +55,15 @@ def main():
     edge_centrality = [(u, v, G.weight(u, v)) for u, v in G.iterEdges()]
 
     edge_centrality_sorted = sorted(edge_centrality, key=lambda x: x[2], reverse=True)
+    return edge_centrality_sorted
+
+
+def main():
+    # Load graph
+    reader = nk.graphio.EdgeListReader(separator=" ", firstNode=0, continuous=False, directed=False)
+    G = reader.read("./graph/2expedge(n=640, m=639).txt")
+
+    edge_centrality_sorted = erw_centrality_algorithm(G)
 
     print("Edge Centrality Values (sorted):")
     csv_data = []
@@ -65,7 +71,7 @@ def main():
         dict_csv_row = {"edge": f"{u}, {v}", "centrality": weight}
         csv_data.append(dict_csv_row)
         print(f"Edge ({u}, {v}): {weight}")
-    CsvWriter().write(csv_data, "./csv_files/time", ["edge", "centrality"])
+    CsvWriter().write(csv_data, "./csv_files/centrality_ERK", ["edge", "centrality"])
 
 
 if __name__ == "__main__":
