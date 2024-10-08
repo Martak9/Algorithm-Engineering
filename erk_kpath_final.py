@@ -1,77 +1,106 @@
 import random
 import networkit as nk
 from networkit import Graph
-
 from csv_writer import CsvWriter
 
 
-def ERW_Kpath(G: nk.Graph, kappa: int, rho: int, beta: float):
-    # Step 1: Assign each node its normalized degree
-    normalized_degrees = {v: G.degree(v) / G.numberOfNodes() for v in G.iterNodes()}
+def assign_normalized_degree(G: Graph):
+    degrees = {}
+    total_edges = G.numberOfEdges()
+    for node in G.iterNodes():
+        degree = G.degree(node)
+        normalized_degree = degree / total_edges
+        degrees[node] = normalized_degree
+    return degrees
 
-    # Step 2: Assign each edge the uniform probability function as weight
+
+def initialize_weights(G: Graph):
+    omega = {}
     uniform_weight = 1.0 / G.numberOfEdges()
     for u, v in G.iterEdges():
-        G.setWeight(u, v, uniform_weight)
+        if u < v:
+            omega[(u, v)] = uniform_weight
+        else:
+            omega[(v, u)] = uniform_weight
+    return omega
 
-    # Step 3-7: Main loop
-    for _ in range(rho):
+
+def ERW_KPath(G: Graph, kappa: int, rho: int, beta: float):
+    normalized_degrees = assign_normalized_degree(G)
+    omega = initialize_weights(G)
+
+    for i in range(rho):
         vn = random.choice(list(G.iterNodes()))
-        N = 0
-        MessagePropagation(G, vn, N, kappa, beta)
+        print(f"\nIterazione {i + 1}:")
+        print(f"Nodo di partenza scelto: {vn}")
+        MessagePropagation(G, vn, kappa, omega, beta)
+
+        print("Current edge weights:")
+        for edge, weight in omega.items():
+            print(f"Edge {edge}: {weight}")
+
+    return omega
 
 
-def MessagePropagation(G: nk.Graph, vn: int, N: int, kappa: int, beta: float):
-    T = {(min(u, v), max(u, v)): 0 for u, v in G.iterEdges()}  # Track visited edges using tuples for undirected edges
+def MessagePropagation(G: Graph, start: int, kappa: int, omega: dict, beta: float):
+    path = [start]
+    print(f"Cammino: {start}", end="")
 
-    while N < kappa and sum(1 for neighbor in G.iterNeighbors(vn) if T[(min(vn, neighbor), max(vn, neighbor))] == 0) > 0:
-        # Select an unvisited edge
-        unvisited_edges = [(vn, neighbor) for neighbor in G.iterNeighbors(vn) if T[(min(vn, neighbor), max(vn, neighbor))] == 0]
-        em = random.choice(unvisited_edges)
+    for _ in range(kappa - 1):  # kappa - 1 perché il nodo di partenza è già nel cammino
+        unvisited_neighbors = [v for v in G.iterNeighbors(path[-1]) if v not in path]
 
-        # Get the next node
-        vn_next = em[1] if em[0] == vn else em[0]
+        if not unvisited_neighbors:
+            print(" (terminato: nessun vicino non visitato)")
+            break
 
-        # Update edge weight
-        current_weight = G.weight(em[0], em[1])
-        G.setWeight(em[0], em[1], current_weight + beta)
+        next_node = random.choice(unvisited_neighbors)
+        print(f" -> {next_node}", end="")
 
-        # Mark edge as visited
-        T[(min(em[0], em[1]), max(em[0], em[1]))] = 1
+        update_edge_weight(omega, path[-1], next_node, beta)
+        path.append(next_node)
 
-        # Move to next node
-        vn = vn_next
-        N += 1
+    print()
+
+
+def update_edge_weight(omega: dict, u: int, v: int, beta: float):
+    key = (min(u, v), max(u, v))
+    omega[key] = omega.get(key, 0) + beta
+
+
+def mark_edge_visited(omega: dict, u: int, v: int):
+    key = (min(u, v), max(u, v))
+    omega[key] = 1
 
 
 def erw_centrality_algorithm(G: Graph):
-    # Algorithm parameters
-    kappa = 3  # Maximum path length
+    kappa = 5  # Maximum path length
     rho = G.numberOfEdges()  # Number of iterations
     beta = 1.0 / G.numberOfEdges()  # Weight increment
 
-    ERW_Kpath(G, kappa, rho, beta)
+    omega = ERW_KPath(G, kappa, rho, beta)
 
-    edge_centrality = [(u, v, G.weight(u, v)) for u, v in G.iterEdges()]
-
+    edge_centrality = [(u, v, weight) for (u, v), weight in omega.items()]
     edge_centrality_sorted = sorted(edge_centrality, key=lambda x: x[2], reverse=True)
+
     return edge_centrality_sorted
 
 
 def main():
     # Load graph
     reader = nk.graphio.EdgeListReader(separator=" ", firstNode=0, continuous=False, directed=False)
-    G = reader.read("./graph/2expedge(n=640, m=639).txt")
+    G = reader.read("./graph/2expedge(n=4, m=5).txt")
+
+    print(f"Grafo caricato. Nodi: {G.numberOfNodes()}, Archi: {G.numberOfEdges()}")
 
     edge_centrality_sorted = erw_centrality_algorithm(G)
 
-    print("Edge Centrality Values (sorted):")
+    print("\nFinal Edge Centrality Values (sorted):")
     csv_data = []
     for u, v, weight in edge_centrality_sorted:
         dict_csv_row = {"edge": f"{u}, {v}", "centrality": weight}
         csv_data.append(dict_csv_row)
         print(f"Edge ({u}, {v}): {weight}")
-    CsvWriter().write(csv_data, "./csv_files/centrality_ERK", ["edge", "centrality"])
+    CsvWriter().write(csv_data, "./csv_files/centrality_ERW", ["edge", "centrality"])
 
 
 if __name__ == "__main__":

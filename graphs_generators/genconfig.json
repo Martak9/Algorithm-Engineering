@@ -3,10 +3,10 @@
   "StdGraphGenerator": {
     "graph_flag": "2expedge",
     "result_folder": "../graph",
-    "n": 640,
-    "m": 639,
+    "n": 10,
+    "m": 30,
     "doubling_n_factor": 1,
-    "doubling_m_factor": 1,
-    "max_number_of_graph": 1
+    "doubling_m_factor": 2,
+    "max_number_of_graph": 2
   }
 }
